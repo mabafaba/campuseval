@@ -2,13 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 const port = 4003;
-app.get('/', (req, res) => {
+app.get('/campuseval', (req, res) => {
     // send index.html file
     res.sendFile(__dirname + '/index.html');
 });
 
 // serve ./client folder
-app.use(express.static('client'));
+app.use('/campuseval', express.static('client'));
 // call them like:
 // http://localhost:4003/universities.geojson
 
@@ -32,7 +32,7 @@ const db = require('./db.js');
 
 
 // endpoint for uniWithContext statistics
-app.get('/stats', async (req, res) => {
+app.get('/campuseval/stats', async (req, res) => {
     // pull from db entries stats field and name field
     const stats = await UniWithContext.find({}).select('stats uni.properties.name');
     res.json(stats);
@@ -40,7 +40,7 @@ app.get('/stats', async (req, res) => {
 // mongodb: any with missing 'stats' property
 
 // 
-app.get('/unis', async (req, res) => {
+app.get('/campuseval/unis', async (req, res) => {
     // var unis = await UniWithContext.find({});
     // only 20
     var unis = await UniWithContext.find({})
@@ -83,7 +83,7 @@ app.get('/unis', async (req, res) => {
 // { _id: ObjectId("678d77560da37a26874edae8") }
 // {
 // amenities matching a university
-app.get('/amenities/:uniId', async (req, res) => {
+app.get('/campuseval/amenities/:uniId', async (req, res) => {
     const uniId = req.params.uniId;
     console.log('uniid', uniId);
     // find where x.uni._id === uniId
@@ -109,7 +109,7 @@ app.get('/amenities/:uniId', async (req, res) => {
     res.json(amenities);
 });
 
-app.get('/uni/complete/:uniId', async (req, res) => {
+app.get('/campuseval/uni/complete/:uniId', async (req, res) => {
     const uniId = req.params.uniId;
     const objectId = new mongoose.Types.ObjectId(uniId);
     const uniWithContext = await UniWithContext.findOne({
@@ -144,7 +144,7 @@ app.get('/uni/complete/:uniId', async (req, res) => {
 
 // endpoint to get stats for a specific point
 
-app.get('/stats/:lat/:lon', async (req, res) => {
+app.get('/campuseval/stats/:lat/:lon', async (req, res) => {
     // get amenities 1km around the point
     const lat = parseFloat(req.params.lat);
     const lon = parseFloat(req.params.lon);
@@ -156,7 +156,7 @@ app.get('/stats/:lat/:lon', async (req, res) => {
 });
 
 
-app.get('/minimalunis', async (req, res) => {
+app.get('/campuseval/minimalunis', async (req, res) => {
     // get the one and only entry from the AllUniWithContextsMinimal collection
     const unis = await db.AllUniWithContextsMinimal.findOne({});
     res.json(unis);
