@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 const port = 4003;
-app.get('/', (req, res) => {
+app.get('/campuseval', (req, res) => {
     // send index.html file
     res.sendFile(__dirname + '/index.html');
 });
