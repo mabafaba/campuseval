@@ -1,8 +1,15 @@
 const mongoose = require('mongoose');
 
 db = mongoose.connection;
-// mongoose.connect('mongodb://localhost:27017/campuseval');
-mongoose.connect('mongodb://mongodb:27017/campuseval');
+
+
+if (process.env.DOCKER === 'true') {
+    mongoose.connect('mongodb://mongodb:27017/campuseval');
+} else {
+    mongoose.connect('mongodb://localhost:27017/campuseval');
+}
+
+
 db.on('error', console.error.bind(console, 'connection error:'));
 
 
