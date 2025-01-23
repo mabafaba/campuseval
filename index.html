@@ -211,6 +211,21 @@
             height: 100%;
             width: 100%;
         }
+
+        #interimloading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            /* above all */
+            z-index: 99999;
+
+        }
         
         
         @keyframes spin {
@@ -291,6 +306,14 @@
                     <h3>scanning campus life... one moment please</h3>
                 </div>
             </div>
+
+            <div id="interimloading" class="flexitem">
+                <div class="spinnercontainer">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+
             <div id="info" class="flexitem">
                 <!-- x to close info -->
                 
@@ -381,6 +404,8 @@
                 
                 
                 focusUniversity = async function(_id) {
+                    showLoading();
+                    setTimeout(async ()=>{
                     if(_id === 'selected-location'){
                         focusSelectedLocation();
                         return;
@@ -435,7 +460,7 @@
                         }
                     });
                     
-                    
+                },0);
                     
                     
                 }
@@ -887,11 +912,22 @@
                 }
                 
                 
+                const showLoading = function(){
+                    const interimLoading = document.getElementById('interimloading')
+                    interimLoading.style.display = 'flex';
+                }
+
+                const hideLoading = function(){
+                    const interimLoading = document.getElementById('interimloading')
+                    interimLoading.style.display = 'none';
+                }
                 
                 
                 const focusSelectedLocation = async function(){
+
                     
-                    
+                    showLoading();
+
                     // get location from <leaflet-location-picker
                     const location = await document.querySelector('leaflet-location-picker')
                     .location()
@@ -904,9 +940,11 @@
                         .then(data => {
                             // if no amenities found, alert and go back to location picker
                             if (data.stats.totalAmenities === 0) {
+                                hideLoading();
                                 alert('No amenities found in this location. Please try a different one.');
                                 return;
                             }
+
 
                             highlightedUni = 'selected-location';
                             console.log('location', location);
@@ -932,6 +970,7 @@
                             // update stats
                             console.log('stats', data.stats);
                             displayStats(data.stats);
+                            hideLoading();
                         });
                     })
                     .then(() => {

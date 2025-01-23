@@ -76,6 +76,9 @@ const views = {
     },
 
     universityMap: function() {
+        console.log('show loading');
+        showLoading()
+        setTimeout(()=>{ // 0 timeout forces loading to be rendered before work begins.
         this.show(['map', 'secondary-action'],['100%'],['100%']);
         map.fitBounds(L.geoJSON(minimalUnis).getBounds());
         removeAmenitiesFromMap();
@@ -100,6 +103,9 @@ const views = {
         this.setSecondaryAction('back', () => {
             this.compareLocation();
         });
+        console.log('hide loading');
+        hideLoading();
+    },0);
     },
 
     universityDetails: function(uniID) {
@@ -132,6 +138,13 @@ const views = {
     },
 
     compareLocation: function(){
+        console.log('show loading');
+        showLoading();
+        setTimeout(()=>{
+
+
+
+
         highlightedUni = "selected-location";
         // visualisations.overviewMap(minimalUnis);
         createScatterChart(minimalUnis);
@@ -179,6 +192,11 @@ const views = {
         this.setSecondaryAction('back', ()=>{
             this.selectedLocationDetails();
         });
+
+        console.log('hide loading');
+        hideLoading();
+    },0)
+          
     },
 
     showInfo: ()=>{
