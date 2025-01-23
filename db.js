@@ -8,7 +8,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 
 
 
-\
+
 const featureSchema = new mongoose.Schema({
     type: {
         type: String,
