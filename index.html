@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>campuseval</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- sakura classless css sakura-sdark-->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" /> -->
+    <!-- retro.css -->
+    <link rel="stylesheet" href="./retro.css" />
+    <!-- Chart.js annotation plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    
+    <!-- functions -->
+    <script src="visualisations.js"></script>
+
+    <!-- scripts -->
+    <!-- viewselector.js -->
+    <script src="viewselector.js"></script>
+    <!-- components -->
+    <script src="webcomponents/leafletlocationpicker.js" type="module"></script>
+    <style>
+        html, body {
+            position: relative;
+            height: 100%;
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        #flexcontainer {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+            width: 100%;
+            margin: 0 auto;
+            justify-content: space-evenly;
+            align-items: center;
+            overflow: hidden;
+            flex-wrap: wrap;
+        }
+        
+        .flexitem {
+            display: flex;
+        }
+
+        .leaflet-control-attribution{
+            opacity: 0.3
+        }
+
+
+        .leaflet-attribution-flag {
+            display: none !important;
+        }
+            
+        #map {
+            height: 50%;
+            width: 100%;
+            background-color: black;
+        }
+        
+        .leaflet-tile-pane {
+            opacity: 0.1;
+        }
+        
+        .spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #03ff1c;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 0.5s ease-in-out infinite;
+            
+        }
+        
+        #locationpicker {
+            height: 100%;
+            width: 100%;
+            display: none;
+        }
+        
+        #primary-action, #secondary-action {
+            position: fixed;
+            bottom: 50px;
+            right: 10px;
+            z-index: 1000;
+            /* neon green */
+            background-color: black;
+            /* radius */
+            border-radius: 20px;
+            height: 40px;
+            width: 100px;
+            cursor: pointer;
+            /* no boarder */
+            border: none;
+            /* text color neon green*/
+            color: #00FF00;
+            /* font size */
+            font-size: 12px;
+            /* all caps */
+            text-transform: uppercase;
+            /* pink shadow */
+            box-shadow: 0 0 10px #00FF00;
+            
+        }
+        
+        #primary-action:hover, #secondary-action:hover {
+            /* bit darker */
+            background-color: #32CD32;
+            /* smaller shadow */
+            box-shadow: 0 0 5px #FF1493;
+            /* move 1px x & y */
+            transform: translate(1px, 1px);
+        }
+        
+        /* make secondary action less visible */
+        #secondary-action {
+            opacity: 0.5;
+            left: 10px;
+        }
+        
+        #info {
+            /* fixed overlay 80%, scrolling div with neon shadow and round corner, scrolling  */
+            position: fixed;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            background-color: black;
+            color: #00FF00;
+            border-radius: 0px;
+            padding: 20px;
+            overflow: auto;
+            display: none;
+            z-index: 1000;
+        }
+        
+        #closeinfobutton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background-color: #ffffff;
+            border-radius: 50%;
+            height: 25px;
+            width: 25px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.332);
+            color: #000000;
+            font-size: 24px;
+            text-align: center;
+            line-height: 25px;
+            font-weight: regular;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.332);
+            display: none;
+        }
+        
+        /* info button should be an almost white circle with a bold "i" in the center at the top righr corner of the screen, turning all white on hover */
+        #infobutton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background-color: #00000000;
+            border-radius: 50%;
+            height: 25px;
+            width: 25px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.332);
+            color: rgba(255, 255, 255, 0.332);
+            font-size: 24px;
+            text-align: center;
+            line-height: 25px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.332);
+        }
+        
+        #infobutton:hover {
+            /* all white shadow */
+            box-shadow: 0 0 10px #FFFFFF;
+        }
+        
+        
+        #overall-stats, #map {
+            height: 50%;
+            width: 100%;
+        }
+        
+        #totalamenities-rank-chart, #entropy-rank-chart {
+            height: 80%;
+            width: 50%;
+            display: none;
+        }
+
+        .spinnercontainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loadingtextcontainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #locationpicker {
+            height: 100%;
+            width: 100%;
+        }
+        
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .statlabel {
+            font-size: 16px;
+            color: #ffffff;
+        }
+        
+        .statvalue {
+            font-size: 34px;
+            color: #00FF00;
+        }
+        
+        #stats, #compare-stats {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+            width: 100%;
+            height: 10%;
+            overflow: hidden;
+        }
+        
+        #amenity-count, #amenity-entropy, #placeholder, #amenity-count-rank, #amenity-entropy-rank {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width:30%;
+        }
+    </style>
+</head>
+<body>
+    <div id="flexcontainer">
+        <div id="stats" class="flexitem">
+            <div id="placeholder" class="flexitem">
+                <h5>Diversity of Amenities around this location</h5>
+            </div>
+            <div id="amenity-count" class="flexitem">
+                <div class = "statlabel">Amenity Count</div>
+                <div id="amenity-count-value" class="statvalue">0</div>
+            </div>
+            <div id="amenity-entropy" class="flexitem">
+                <div class = "statlabel">Diversity Score</div>
+                <div id="amenity-entropy-value" class="statvalue">0</div>
+            </div>
+            
+        </div>
+
+        <div id="compare-stats" class="flexitem">
+            <div id="placeholder" class="flexitem">
+                <h5>In comparison to other university buildings</h5>
+            </div>
+            <div id="amenity-count-rank" class="flexitem">
+                <div id="amenity-count-rank-label" class = "statlabel"></div>
+                <div id="amenity-count-rank-value" class="statvalue">0</div>
+            </div>
+            <div id="amenity-entropy-rank" class="flexitem">
+                <div id="amenity-entropy-rank-label" class = "statlabel"></div>
+                <div id="amenity-entropy-rank-value" class="statvalue">0</div>
+            </div>
+            
+        </div>
+
+
+        <div id="locationpicker">
+            <leaflet-location-picker width="100%" height="100%" mapwidth="100%" mapheight="100%"  lat="53.51766844797456", lon="9.953613281250002" zoom="4"></laeflet-location-picker>
+            </div>
+            <div id="loading" class="flexitem">
+                <div class="spinnercontainer">
+                    <div class="spinner"></div>
+                </div>
+                <div class="loadingtextcontainer">
+                    <h3>scanning campus life... one moment please</h3>
+                </div>
+            </div>
+            <div id="info" class="flexitem">
+                <!-- x to close info -->
+                
+                
+                
+                <!-- <h3>Angebotsvielfalt um Universitäten und Lehrgebäude in und um Deutschland</h3> -->
+                 <!-- englsih -->
+                  <h3>Diversity of Amenities around University Buildings in Germany</h3>
+                
+                <h5>
+                    Here you can select a location to evaluate how diverse the amenities are around. Compare to the location of ~9500 university buildings in Germany and the ~6.3 million amenities around them.
+                </h5>
+                <h5>About</h5>
+                <p>
+                    In this analysis, we examine the surroundings of nearly 10.000 university buildings in and around Germany using OpenStreetMap (OSM) data.
+                    We focus on the amenities available within a 1km radius of each university building (about 6.3 million amenities analysed in total). The diversity of these amenities is measured using information entropy, which quantifies the variety and distribution of different types of amenities around each university.
+                    The higher the number of amenities around a university building, and the higher the diversity of these amenities, the higher the entropy value.
+                    "University" is any building with the tag "amenity=university" in OSM, which is a fairly broad category.
+                </p>
+
+                <h5>Information Entropy as a Measure of Diversity</h5>
+                <p>
+                    The "Diversity Score" is based on information entropy, the more points there are, the higher the score. Locally rare amenities (for example a karaoke bar) add more to the score than common ones (for example a public bench).
+                </p> 
+
+                <h5>Map Visualisation</h5>
+                <p>
+                    The map shows the location of each university building as a green dot. Clicking on a dot will highlight the university building and show the amenities around it. The scatter plot shows the number of amenities and the diversity score for each university building. The bar chart shows the number of each type of amenity around the selected university building.
+                </p>
+
+                <h5>Data</h5>
+                <p>
+                    The data is based on OpenStreetMap data from January 2025. "University Buildings" are all point and polygon features with the tag "building=university".
+                    "Amenities" includes all point features with an "amenity" tag within a 1km radius of each "university building".
+                </p>
+            </div>
+            
+            <div id="overall-stats" class="flexitem">
+                <canvas id="overall-stats-chart"></canvas>
+            </div>
+            <div id='selected-uni-stats' class="flexitem">
+                <canvas id="selected-uni-stats-chart"></canvas>
+            </div>
+            
+            <div id="selected-location-stats" class="flexitem">
+                <canvas id="selected-location-stats-chart"></canvas>
+            </div>
+
+            <div id="totalamenities-rank-chart" class="flexitem">
+            </div>
+            <div id="entropy-rank-chart" class="flexitem">
+            </div>
+            
+            <div id="map" class="flexitem"></div>
+            
+        </div>
+        
+        <button id="primary-action" onclick="views.primaryAction()">UNIVERSITY MAP</button>
+        <button id="secondary-action" onclick="views.secondaryAction()">UNIVERSITY DETAILS</button>
+        
+        <!-- info icon in top right corner -->
+        <div id="infobutton" onclick="views.showInfo()">i</div>
+        
+        <div id='closeinfobutton' onclick="views.hideInfo()">x</button>
+            <!-- <button id="compare-new-location">COMPARE NEW LOCATION</button> -->
+            <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+            <script>
+                
+                const loadingOverlay = document.getElementById('loading');
+                
+                loadingOverlay.style.position = 'absolute';
+                loadingOverlay.style.top = '0';
+                loadingOverlay.style.left = '0';
+                loadingOverlay.style.width = '100%';
+                loadingOverlay.style.height = '100%';
+                loadingOverlay.style.backgroundColor = 'rgba(0,0,0)';
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.justifyContent = 'center';
+                loadingOverlay.style.alignItems = 'center';
+                
+                loadingOverlay.style.zIndex = 10000;
+                console.log('loadingOverlay', loadingOverlay);
+                document.body.appendChild(loadingOverlay);
+                
+                
+                views.loading();
+                
+                
+                
+                focusUniversity = async function(_id) {
+                    if(_id === 'selected-location'){
+                        focusSelectedLocation();
+                        return;
+                    }
+                    console.log('focusing on university', _id);
+                    views.universityDetails(_id);
+                    // turn map marker red
+                    // from map object, get the layer with the _id
+                    // code:
+
+                    highlightedUni = _id;
+                    // addAmenitiesToMap(_id);
+
+                    createScatterChart(minimalUnis);
+                    
+                    console.log('stats', stats);
+                    await fetch('./uni/complete/' + _id)
+                    .then(response => response.json())
+                    .then(data => {
+                        addAmenitiesToMap(data.amenities, data.stats, map);
+                        
+                        scatterChart.update();
+                        const parent = document.getElementById('selected-uni-stats-chart');
+                        countBarchart( data.stats.amenityCounts, parent);
+                        displayStats(data.stats);
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+                    
+                    map.eachLayer(function(layer) {
+                        if (layer.feature && layer.feature._id === _id) {
+                            // layer is the layer with the _id
+                            layer.setStyle({
+                                fillColor: 'red',
+                                color: 'red'
+                            });
+                            // hide points:
+                            
+                            // map.flyTo(layer.getLatLng(), 14)
+                            // don't fly, go directly
+                            map.setView(layer.getLatLng(), 14);
+                            
+                            // if property has amenity and value university, make green
+                        }else if(layer.feature && layer.feature.properties && layer.feature.properties.amenity && layer.feature.properties.amenity === 'university'){
+                            // set all other markers to green
+                            layer.setStyle({
+                                fillColor: 'green',
+                                color: 'green'
+                            });
+                            
+                        }
+                    });
+                    
+                    
+                    
+                    
+                }
+                
+                var map = L.map('map').setView([51.1657, 10.4515], 6); // Coordinates for Germany with appropriate zoom level
+                
+                var amenitiesLayerGroup = L.featureGroup().addTo(map);
+                
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                
+                
+                let scatterChart;
+                let minimalUnis;
+                let unis;
+                let amenities;
+                let highlightedUni;
+                let selectedLocation;
+                function fetchUnis() {
+                    
+                    function minimalUnisToGeoJson(minimalUnis) {
+                        console.log('minimalUnis', minimalUnis);
+                       
+                        const features = minimalUnis.uniIds.map((id, index) => ({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [minimalUnis.lons[index], minimalUnis.lats[index]]
+                            },
+                            properties: {
+                                stats: {
+                                    name: minimalUnis.names[index],
+                                    totalAmenities: minimalUnis.totalAmenities[index],
+                                    amenityEntropy: minimalUnis.entropies[index]
+                                }
+                            },
+                            _id: minimalUnis.uniIds[index],
+                        }));
+                        
+                        return {
+                            type: 'FeatureCollection',
+                            features: features
+                        };
+                    }
+                    
+                    return fetch('./minimalunis')
+                    .then(response => response.json())
+                    .then(data => {
+                        
+                        
+                        minimalUnis = minimalUnisToGeoJson(data);
+                        return minimalUnis;
+                    });
+                }
+                
+                function fetchAmenities(uniID) {
+                    return fetch('./amenities/' + uniID)
+                    .then(response => response.json())
+                    .then(data => {
+                        amenities = data;
+                        return data;
+                    });
+                }
+
+                function selectedLocationToDataPoint (lat,lon,totalAmenities,entropy){
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [lon, lat]
+                        },
+                        properties: {
+                            name: 'Selected Location',
+                            stats: {
+                                totalAmenities: totalAmenities,
+                                amenityEntropy: entropy
+                            }
+                        },
+                        _id: 'selected-location'
+                    }
+                }
+                
+                
+                
+                function createScatterChart(data, extraPoint=null) {
+                    var ctx = document.getElementById('overall-stats-chart').getContext('2d');
+                    ctx.canvas.width = ctx.canvas.clientWidth;
+                    ctx.canvas.height = ctx.canvas.clientHeight
+                    // if chart exists, destroy it
+                    if (scatterChart) {
+                        scatterChart.destroy();
+                    }
+                    console.log('data', data);
+
+                    // set all points to not highlighted
+                    data.features.forEach(d => {
+                        d.properties.stats.highlighted = false;
+                    });
+                    // add extra point to data
+
+                    // set extra point to highlighted
+                    if (extraPoint) {
+                        highlightedUni = extraPoint._id;
+                        data.features.push(extraPoint);
+
+                    }
+                    
+
+
+                    data = data.features.filter(d => d.properties && d.properties.stats && d.properties.stats.totalAmenities !== undefined && d.properties.stats.amenityEntropy !== undefined);
+                    console.log('data filtered', data);
+                    scatterChart = new Chart(ctx, {
+                        plugins: [{
+                            id: 'cursorPointer',
+                            afterEvent: function(chart, args) {
+                                const {event} = args;
+                                const points = chart.getElementsAtEventForMode(event, 'nearest', {intersect: true}, false);
+                                event.native.target.style.cursor = points.length ? 'pointer' : 'default';
+                            }
+                        }],
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                data: data.map(d => ({
+                                    x: d.properties.stats.totalAmenities,
+                                    y: d.properties.stats.amenityEntropy,
+                                    r: 10,
+                                    _id: d._id,
+                                    name: d.properties.name,
+                                    label: d.properties.name,
+                                    highlighted: false
+                                })),
+                                backgroundColor: context => context.dataset.data[context.dataIndex].highlighted ? context.dataset.data[context.dataIndex].highlightColor : 'rgba(0, 255, 0, 0.1)',
+                                borderColor: context => context.dataset.data[context.dataIndex].highlighted ? context.dataset.data[context.dataIndex].highlightColor : 'rgba(0, 255, 0, 0.1)',
+                                borderWidth: 1,
+                                z: context => context.dataset.data[context.dataIndex].highlighted ? 1 : 0,
+                                labels: ['Total Amenities in 1km radius', 'Amenity Entropy']
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        title: context => context[0].raw.name,
+                                        label: context => `number of amenities: ${context.raw.x}, amenity diversity: ${context.raw.y.toFixed(2)}`
+                                    },
+                                    mode: 'nearest',
+                                    intersect: true
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                events: ['click'],
+                                
+                                responsive: true
+                                
+                                
+                            },
+                            
+                            onClick: (event, elements) => {
+                                if (elements.length > 0) {
+                                    console.log(elements);
+                                    console.log(event);
+                                    const element = elements[0];
+                                    const universityId = scatterChart.data.datasets[element.datasetIndex].data[element.index]._id;
+                                    focusUniversity(universityId);
+                                }
+                            },
+                            
+                            scales: {
+                                x: {
+                                    type: 'linear',
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Amenities'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    title: {
+                                        display: true,
+                                        text: 'Amenity Diversity'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    
+                    // highlight in chart
+                    if(highlightedUni) {
+                        scatterChart.data.datasets[0].data.forEach(function(d) {
+                            // console.log(d._id, _id);
+                            // console.log(d._id == _id);
+                            // convert to string
+                            const chartId = d._id.toString();
+                            const mapId = highlightedUni.toString();
+                            
+                            
+                            if (d._id == highlightedUni) {
+                                console.log('highlighting!!!', d);
+                                // set point color to red
+                                d.highlighted = true;
+                                d.highlightColor = 'red';
+                                d.r = 10;
+                                console.log('highlighted', d);
+                                
+                                // add line segments from both axes to point
+                                // red dotted line!
+                                scatterChart.options.plugins.annotation.annotations = [
+                                {
+                                    type: 'line',
+                                    mode: 'vertical',
+                                    scaleID: 'x',
+                                    value: d.x,
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5]
+                                },
+                                {
+                                    type: 'line',
+                                    mode: 'horizontal',
+                                    scaleID: 'y',
+                                    value: d.y,
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5]
+                                }
+                                ];
+                                
+                                scatterChart.update();
+                                
+                            } else {
+                                d.highlighted = false;
+                                d.r = 5;
+                            }
+                        });
+                    }
+                }
+                
+                fetchUnis()
+                .then(data => {
+                    console.log(visualisations);
+                    visualisations.overviewMap(data);
+                    return data;
+                })
+                .then(createScatterChart)
+                .then(() => {
+                    views.locationpicker();
+                })
+                .catch(error => {
+                    console.log(error);
+                    loadingOverlay.innerHTML = '<div id="spinnercontainer"><div id="loadingtextcontainer"><h3 style="color:#FF0000">Failed to retrieve data</h3></div>';
+                });
+                
+                
+                
+                
+                
+                function countBarchart(counts,parent){
+                    
+                    // update the selected uni chart
+                    var ctx = parent.getContext('2d');
+                    ctx.canvas.width = ctx.canvas.clientWidth;
+                    ctx.canvas.height = ctx.canvas.clientHeight;
+                    
+                    // if parent has a chart, destroy it
+                    var chart = Chart.getChart(ctx);
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    var data = counts;
+                    // sort data descending
+                    data = Object.fromEntries(
+                    Object.entries(data).sort(([,a],[,b]) => b-a)
+                    );
+                    
+                    var labels = Object.keys(data);
+                    var values = Object.values(data);
+                    
+                    // get color scale for the amenities
+                    const colors = labels.map(label => colorScale(labels)[label]);
+                    
+                    return new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Number of amenities',
+                                data: values,
+                                backgroundColor: colors
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    type: 'logarithmic',
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                    parent.appendChild(ctx.canvas);
+                    
+                    // update
+                    chart.update();
+                    return chart;
+                }
+                
+                var amenitiesLayerGroup = L.layerGroup().addTo(map);
+                
+                
+                function addAmenitiesToMap(amenities, stats, map){
+                    // set a rainbow color scale, one for each amenity type
+                    
+                    console.log('amenities', amenities);
+                    console.log('stats', stats);
+                    var amenityTypes = stats.amenityCounts;
+                    
+                    // sort 
+                    var amenityTypes = Object.fromEntries(
+                    Object.entries(amenityTypes).sort(([,a],[,b]) => b-a)
+                    );
+                    const colors = colorScale(Object.keys(amenityTypes));
+                    console.log('colors', colors);
+                    console.log('amenityTypes', amenityTypes);
+                    console.log('stats', stats);
+                    
+                    let rarity = Object.values(amenityTypes).map(d => 20 / Math.log(d+1));
+                    // constrain to 2 - 20
+                    rarity = rarity.map(x=>{
+                        if (x < 2) {
+                            return 2;
+                        } else if (x > 20) {
+                            return 20;
+                        } else {
+                            return x;
+                        }
+                    });
+                    
+                    // add to map
+                    var amenitiesLayer = L.geoJSON(amenities, {
+                        pointToLayer: function (feature, latlng) {
+                            console.log('color', colors[feature.properties.amenity]);
+                            return L.circleMarker(latlng, {
+                                radius: rarity[Object.keys(amenityTypes).indexOf(feature.properties.amenity)],
+                                fillColor: colors[feature.properties.amenity],
+                                color: colors[feature.properties.amenity],
+                                weight: 1,
+                                opacity: 0.5,
+                                fillOpacity: 0.5
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.amenity) {
+                                layer.bindTooltip(feature.properties.amenity);
+                            }
+                        }
+                        
+                    });
+                    amenitiesLayerGroup.addLayer(amenitiesLayer);
+                    
+                    map.addLayer(amenitiesLayerGroup);
+                    
+                    // fit map to bounds
+                    console.log('fitting map to bounds');
+                    console.log('bounds', amenitiesLayer.getBounds());
+                    map.fitBounds(amenitiesLayer.getBounds());
+                    
+                }
+                
+                
+                
+                function removeAmenitiesFromMap(){
+                    // remove amenities from map
+                    if (amenitiesLayerGroup) {
+                        amenitiesLayerGroup.clearLayers();
+                    }
+                }
+                
+                function colorScale(names) {
+                    // create a color scale
+                    const n_colors = names.length;
+                    const colors = Array.from({length: n_colors}, (v, i) => {
+                        return 'hsl(' + Math.round(180+(i * 180 / n_colors)) + ', 100%, 50%)';
+                    });
+                    // object with {type: color}
+                    return Object.fromEntries(names.map((d, i) => {
+                        return [d, colors[i]];
+                    }));
+                }
+                
+                
+                // automatically fit charts in container whenever container size changes
+                window.addEventListener('resize', function() {
+                    if (scatterChart) {
+                        scatterChart.resize();
+                    }
+                    
+                });
+                
+                
+                highlightUniInColor = function(_id, color){
+                    
+                    // map
+                    map.eachLayer(function(layer) {
+                        if (layer.feature && layer.feature._id === _id) {
+                            // if color is false, set to green
+                            if (!color) {
+                                var usecolor = 'green';
+                            } else {
+                                var usecolor = color;
+                            }
+                            // layer is the layer with the _id
+                            layer.setStyle({
+                                fillColor: usecolor,
+                                color: usecolor
+                            });
+                        }
+                    });
+                    
+                    // chart
+                    scatterChart.data.datasets[0].data.forEach(function(d) {
+                        if (d._id == _id) {
+                            if (color) {
+                                d.highlighted = true;
+                                d.highlightColor = color;
+                                d.r = 10;
+                            } else {
+                                d.highlighted = false;
+                                d.r = 5;
+                            }
+                        } else {
+                            d.highlighted = false;
+                            d.r = 5;
+                        }
+                    });
+                    
+                }
+                
+                
+                
+                
+                const focusSelectedLocation = async function(){
+                    
+                    
+                    // get location from <leaflet-location-picker
+                    const location = await document.querySelector('leaflet-location-picker')
+                    .location()
+                    .then(location => {
+                        // /stats/:lat/:lon
+                        console.log(location);
+                        var url = './stats/' + location.lat + '/' + location.lng;
+                        return fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            // if no amenities found, alert and go back to location picker
+                            if (data.stats.totalAmenities === 0) {
+                                alert('No amenities found in this location. Please try a different one.');
+                                return;
+                            }
+
+                            highlightedUni = 'selected-location';
+                            console.log('location', location);
+                            selectedLocation = selectedLocationToDataPoint(location.lat, location.lng, data.stats.totalAmenities, data.stats.amenityEntropy);
+                            // replace 'selected-location' in minimalUnis
+                            if (minimalUnis.features.length > 1) {
+                                minimalUnis.features = minimalUnis.features.filter(d => d._id !== 'selected-location');
+                            }
+                            minimalUnis.features.push(selectedLocation);
+                            
+                            // highlight
+                            highlightedUni = 'selected-location';
+
+
+                            
+                            views.selectedLocationDetails();
+                            // add amenities to map
+                            console.log('adding amenities to map', data);
+                            addAmenitiesToMap(data.amenities, data.stats, map);
+                            // update the selected uni stats chart
+                            var parent = document.getElementById('selected-location-stats-chart');
+                            const chart = countBarchart(data.stats.amenityCounts, parent);
+                            // update stats
+                            console.log('stats', data.stats);
+                            displayStats(data.stats);
+                        });
+                    })
+                    .then(() => {
+                        
+                    })
+                    .catch(error => {
+                        // go back to location picker view
+                        // alert that no amenities were found
+                        
+                        views.locationpicker();
+                        
+                    });
+                    
+                }
+                
+                displayStats = function(stats){
+                console.log('displaying stats', stats);
+                    // update stats
+                    document.getElementById('amenity-count-value').innerHTML = stats.totalAmenities;
+                    document.getElementById('amenity-entropy-value').innerHTML = stats.amenityEntropy.toFixed(2);
+                }
+
+                displayCompareStats = function(){
+                    
+                    function rank(value, array){
+                        array.sort((a, b) => a - b);
+                        return array.indexOf(value) + 1;
+                    }
+                    function rankPercent(value, array){
+                        array.sort((a, b) => a - b);
+                        return (array.indexOf(value) + 1) / array.length * 100;
+                    }
+
+                    const amenitycount = selectedLocation.properties.stats.totalAmenities;
+                    const comparisonCounts = minimalUnis.features.map(d => d.properties.stats.totalAmenities);
+                    const rankAmenity = rank(amenitycount, comparisonCounts);
+                    const rank_of = comparisonCounts.length;
+
+                    const amenityCountHigherThanPercent = Math.round(rankPercent(amenitycount, comparisonCounts),4) + '%';
+                    
+
+                    const entropy = selectedLocation.properties.stats.amenityEntropy;
+                    const comparisonEntropies = minimalUnis.features.map(d => d.properties.stats.amenityEntropy);
+                    const rankEntropy = rank(entropy, comparisonEntropies);
+                    const rank_of_entropy = comparisonEntropies.length;
+                    const entropyHigherThanPercent = Math.round(rankPercent(entropy, comparisonEntropies),4) + '%';
+    
+                    document.getElementById('amenity-count-rank-label').innerHTML = 'More amenities than'
+                    document.getElementById('amenity-count-rank-value').innerHTML = amenityCountHigherThanPercent
+
+                    document.getElementById('amenity-entropy-rank-label').innerHTML = "Higher diversity score than"
+                    document.getElementById('amenity-entropy-rank-value').innerHTML = entropyHigherThanPercent;
+
+                    
+                }
+                
+            </script>
+        </body>
+        </html>

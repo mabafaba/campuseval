@@ -1,0 +1,21 @@
+version: '3'
+services:
+  web:
+    depends_on:
+      - mongodb
+    image: campuseval
+    container_name: campuseval-web
+    ports:
+      - "3041:4003"
+    environment:
+      - DOCKER=true
+    restart: always
+  mongodb:
+    image: mongo
+    container_name: campuseval-mongodb
+    restart: always
+    volumes:
+      - campuseval-mongodb-data:/data/db
+
+volumes:
+  campuseval-mongodb-data:
