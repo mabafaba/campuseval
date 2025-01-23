@@ -10,18 +10,18 @@
     <!-- sakura classless css sakura-sdark-->
     <!-- <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" /> -->
     <!-- retro.css -->
-    <link rel="stylesheet" href="./campuseval/retro.css" />
+    <link rel="stylesheet" href="retro.css" />
     <!-- Chart.js annotation plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
     
     <!-- functions -->
-    <script src="campuseval/visualisations.js"></script>
+    <script src="visualisations.js"></script>
 
     <!-- scripts -->
     <!-- viewselector.js -->
-    <script src="campuseval/viewselector.js"></script>
+    <script src="viewselector.js"></script>
     <!-- components -->
-    <script src="campuseval/webcomponents/leafletlocationpicker.js" type="module"></script>
+    <script src="webcomponents/leafletlocationpicker.js" type="module"></script>
     <style>
         html, body {
             position: relative;
@@ -397,7 +397,7 @@
                     createScatterChart(minimalUnis);
                     
                     console.log('stats', stats);
-                    await fetch('./campuseval/uni/complete/' + _id)
+                    await fetch('./uni/complete/' + _id)
                     .then(response => response.json())
                     .then(data => {
                         addAmenitiesToMap(data.amenities, data.stats, map);
@@ -483,7 +483,7 @@
                         };
                     }
                     
-                    return fetch('./campuseval/minimalunis')
+                    return fetch('./minimalunis')
                     .then(response => response.json())
                     .then(data => {
                         
@@ -494,7 +494,7 @@
                 }
                 
                 function fetchAmenities(uniID) {
-                    return fetch('./campuseval/amenities/' + uniID)
+                    return fetch('./amenities/' + uniID)
                     .then(response => response.json())
                     .then(data => {
                         amenities = data;
@@ -898,7 +898,7 @@
                     .then(location => {
                         // /stats/:lat/:lon
                         console.log(location);
-                        var url = './campuseval/stats/' + location.lat + '/' + location.lng;
+                        var url = './stats/' + location.lat + '/' + location.lng;
                         return fetch(url)
                         .then(response => response.json())
                         .then(data => {
