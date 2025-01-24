@@ -981,7 +981,7 @@
                     .catch(error => {
                         // go back to location picker view
                         // alert that no amenities were found
-                        
+                        hideLoading();
                         views.locationpicker();
                         
                     });
